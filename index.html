@@ -16,6 +16,8 @@
 		<!-- Optional theme -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
 
+		<link href='http://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
+
 		<!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
 		<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
 		<!--[if lt IE 9]>
@@ -30,19 +32,44 @@
 				overflow: hidden;
 			}
 
+			section {
+				position: absolute;
+				top: 0px;
+				left: 0px;
+			}
+
 			.vslogo {
-				width: 100%;
-				height: 100%;
+				position: absolute;
+				bottom: 50%;
+				left: 25%;
+				width: 50%;
+				height: 200px;
 				overflow: hidden;
 				background-image: url("https://dl.dropboxusercontent.com/u/10676965/volkovasystems.png");
 				background-position: center center;
 				background-size: 200px;
 				background-repeat: no-repeat;
 			}
+
+			.vsinput {
+				position: absolute;
+				bottom: 45%;
+				left: 25%;
+				width: 50%;
+				text-align: center;
+				font-size: 17px;
+				font-family: "Inconsolata";
+				border: 0;
+			}
+
+			.vsinput:focus {
+				outline: none;
+			}
 		</style>
 	</head>
 	<body>
-		<section vslogo></section>
+		<section vslogo command="show-home"></section>
+		<section vsinput command="@keypress:*"></section>
 
 
 		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
@@ -56,22 +83,69 @@
 		<script type="text/javascript" src="https://fb.me/react-with-addons-0.11.2.min.js"></script>
 
 		<script type="text/javascript">
-			var vslogo = React.createClass( {
-				"render": function onRender( ){
-					return React.DOM.section( { "className": "vslogo" } );
-				}
-			} );
-
 			var VS = angular.module( "VS", [ ] );
 
 			VS.directive( "vslogo", [
 				function directive( ){
+					var vslogo = React.createClass( {
+						"render": function onRender( ){
+							return React.DOM.div( { "className": "vslogo" } );
+						}
+					} );
+
 					return {
 						"restrict": "EA",
 						"link": function onLink( scope, element, attributeSet ){
 							React.renderComponent( vslogo( ), element[ 0 ] );
 						}
 					};
+				}
+			] );
+
+			VS.directive( "vsinput", [
+				function directive( ){
+					var vsinput = React.createClass( {
+						"getInitialState": function getInitialState( ){
+							return {
+								"command": ""
+							};
+						},
+
+						"onKeyPress": function onKeyPress( event ){
+							if( event.key == "Enter" ){
+								//Do something.
+							}
+						},
+
+						"onChange": function onChange( event ){
+							this.setState( {
+								"command": event.target.value
+							} );
+						},
+
+						"render": function onRender( ){
+							return React.DOM.input( {
+								"className": "vsinput",
+								"onKeyPress": this.onKeyPress,
+								"onChange": this.onChange,
+								"placeholder": "volkovasystems",
+								"value": this.state.command
+							} );
+						},
+
+						"componentDidUpdate": function onComponentDidUpdate( prevProps, prevState ){
+							if( prevState.command != this.state.command ){
+								this.props.scope.command = this.state.command;
+							}
+						}
+					} );
+
+					return {
+						"restrict": "EA",
+						"link": function onLink( scope, element, attributeSet ){
+							React.renderComponent( vsinput( { "scope": scope } ), element[ 0 ] );
+						}
+					}
 				}
 			] );
 		</script>
