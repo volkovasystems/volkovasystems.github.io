@@ -14,6 +14,7 @@
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
 
 		<link href='http://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
+		<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
 
 		<!--[if lt IE 9]>
 		  <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
@@ -120,6 +121,7 @@
 			}
 
 			.vsview-github-profile .profile-container {
+				font-family: 'Open Sans', sans-serif;
 				margin-top: 35%;
 				padding: 1%;
 			}
@@ -324,7 +326,7 @@
 
 						"componentWillMount": function componentWillMount( ){
 							var self = this;
-							this.props.scope.$on( "github-user-logged-in",
+							this.props.scope.$on( "github-user-data-retrieved",
 								function onGithubUserLoggedIn( ){
 									self.setState( {
 										"username": "",
@@ -350,8 +352,7 @@
 										"type": "text",
 										"className": "username-input row col-md-6 col-md-offset-3",
 										"value": this.state.username,
-										"onChange": this.onUsernameChange,
-										"placeholder": "Enter username."
+										"onChange": this.onUsernameChange
 									}
 								),
 								React.DOM.input(
@@ -359,8 +360,7 @@
 										"type": "password",
 										"className": "password-input row col-md-6 col-md-offset-3",
 										"value": this.state.password,
-										"onChange": this.onPasswordChange,
-										"placeholder": "Enter password."
+										"onChange": this.onPasswordChange
 									}
 								)
 							)
@@ -458,22 +458,27 @@
 								function onGithubUserLoggedIn( event, githubUser, username ){
 									githubUser.show( username,
 										function onProfileData( error, userData ){
-											self.props.scope.$root.githubCurrentUserData = userData;
+											if( error ){
 
-											self.setState( {
-												"profileImage": userData.avatar_url,
-												"profileName": userData.name,
-												"profileEMail": userData.email,
-												"profileURL": userData.html_url
-											} );
+											}else{
+												self.props.scope.$root.githubCurrentUserData = userData;
 
-											$( ".profile-image", self.getDOMNode( ) )
-												.css( 
-													"background-image", 
-													"url('@imageUrl')".replace( "@imageUrl", userData.avatar_url ) 
-												);
+												self.setState( {
+													"profileImage": userData.avatar_url,
+													"profileName": userData.name,
+													"profileEMail": userData.email,
+													"profileURL": userData.html_url
+												} );
 
-											self.props.scope.$root.$broadcast( "execute-command", "show-github-profile" );
+												$( ".profile-image", self.getDOMNode( ) )
+													.css( 
+														"background-image", 
+														"url('@imageUrl')".replace( "@imageUrl", userData.avatar_url ) 
+													);
+
+												self.props.scope.$root.$broadcast( "github-user-data-retrieved" );
+												self.props.scope.$root.$broadcast( "execute-command", "show-github-profile" );	
+											}
 										} );
 								} );
 						},
@@ -485,34 +490,34 @@
 								},
 								React.DOM.div(
 									{
-										"className": "profile-container row col-md-6 col-md-offset-3"
+										"className": "profile-container row col-md-8 col-md-offset-2"
 									},
 									React.DOM.div(
 										{
-											"className": "profile-image col-md-5"
+											"className": "profile-image col-md-4"
 										}
 									),
 									React.DOM.div(
 										{
-											"className": "profile-data col-md-7"
+											"className": "profile-data col-md-8"
 										},
 										React.DOM.div(
 											{
 												"className": "profile-name row"
 											},
-											React.DOM.h3( null, this.state.profileName )
+											React.DOM.h2( null, this.state.profileName )
 										),
 										React.DOM.div(
 											{
 												"className": "profile-email row"
 											},
-											React.DOM.h5( null, this.state.profileEMail )
+											React.DOM.h4( null, this.state.profileEMail )
 										),
 										React.DOM.div(
 											{
 												"className": "profile-url row"
 											},
-											React.DOM.h6( 
+											React.DOM.h5( 
 												null,
 												React.DOM.a(
 													{
