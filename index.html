@@ -118,6 +118,27 @@
 				border: 1px solid #efefef;
 				padding: 1%;
 			}
+
+			.vsview-github-profile .profile-container {
+				margin-top: 35%;
+				padding: 1%;
+			}
+
+			.vsview-github-profile .profile-name {
+				border-bottom: 1px solid #ccc
+			}
+
+			.vsview-github-profile .profile-url {
+				margin-top: -10px;
+				cursor: pointer;
+			}
+
+			.vsview-github-profile .profile-image {
+				height: 128px;
+				background-position: center center;
+				background-size: 128px;
+				background-repeat: no-repeat;
+			}
 		</style>
 	</head>
 	<body>
@@ -183,7 +204,7 @@
 									return commandDefinition.split( /\s+/ )[ 0 ];
 								} );
 
-							scope.$root.$on( "execute-command",
+							scope.$on( "execute-command",
 								function onExecuteCommand( event, command ){
 									if( _.contains( commandList, command.split( /\s+/ )[ 0 ] ) ){
 										$( "section" )
@@ -302,6 +323,15 @@
 						},
 
 						"componentWillMount": function componentWillMount( ){
+							var self = this;
+							this.props.scope.$on( "github-user-logged-in",
+								function onGithubUserLoggedIn( ){
+									self.setState( {
+										"username": "",
+										"password": "",
+										"inputTimeout": null
+									} );
+								} );
 						},
 
 						"render": function onRender( ){
@@ -373,7 +403,7 @@
 									return commandDefinition.split( /\s+/ )[ 0 ];
 								} );
 
-							scope.$root.$on( "execute-command",
+							scope.$on( "execute-command",
 								function onExecuteCommand( event, command ){
 									if( _.contains( commandList, command.split( /\s+/ )[ 0 ] ) ){
 										$( "section" )
@@ -399,7 +429,7 @@
 								} );
 
 							scope.$on( "github-user-logged-in",
-								function onExecuteCommand( event, githubUser, username ){
+								function onGithubUserLoggedIn( event, githubUser, username ){
 									scope.$root.githubCurrentUser = username;
 									scope.$root.githubUser = githubUser;
 								} );
@@ -407,6 +437,133 @@
 							React.renderComponent( vsviewGithubLogin( { "scope": scope } ), element[ 0 ] );
 						}
 					};
+				}
+			] );
+
+			VS.directive( "vsviewGithubProfile", [
+				function directive( ){
+					var vsviewGithubProfile = React.createClass( {
+						"getInitialState": function getInitialState( ){
+							return {
+								"profileImage": "",
+								"profileName": "",
+								"profileEMail": "",
+								"profileURL": ""
+							};
+						},
+
+						"componentWillMount": function componentWillMount( ){
+							var self = this;
+							this.props.scope.$on( "github-user-logged-in",
+								function onGithubUserLoggedIn( event, githubUser, username ){
+									githubUser.show( username,
+										function onProfileData( error, userData ){
+											self.props.scope.$root.githubCurrentUserData = userData;
+
+											self.setState( {
+												"profileImage": userData.avatar_url,
+												"profileName": userData.name,
+												"profileEMail": userData.email,
+												"profileURL": userData.html_url
+											} );
+
+											$( ".profile-image", self.getDOMNode( ) )
+												.css( 
+													"background-image", 
+													"url('@imageUrl')".replace( "@imageUrl", userData.avatar_url ) 
+												);
+
+											self.props.scope.$root.$broadcast( "execute-command", "show-github-profile" );
+										} );
+								} );
+						},
+
+						"render": function onRender( ){
+							return React.DOM.div(
+								{
+									"className": "vsview-github-profile container-fluid"
+								},
+								React.DOM.div(
+									{
+										"className": "profile-container row col-md-6 col-md-offset-3"
+									},
+									React.DOM.div(
+										{
+											"className": "profile-image col-md-5"
+										}
+									),
+									React.DOM.div(
+										{
+											"className": "profile-data col-md-7"
+										},
+										React.DOM.div(
+											{
+												"className": "profile-name row"
+											},
+											React.DOM.h3( null, this.state.profileName )
+										),
+										React.DOM.div(
+											{
+												"className": "profile-email row"
+											},
+											React.DOM.h5( null, this.state.profileEMail )
+										),
+										React.DOM.div(
+											{
+												"className": "profile-url row"
+											},
+											React.DOM.h6( 
+												null,
+												React.DOM.a(
+													{
+														"src": this.state.profileURL	
+													},
+													this.state.profileURL
+												)
+											)
+										)
+									) 
+								)
+							);
+						}
+					} );
+
+					return {
+						"restrict": "EA",
+						"link": function onLink( scope, element, attributeSet ){
+							var commandDefinitionList = attributeSet.command.split( /\s*\,\s*/ );
+
+							var commandList = commandDefinitionList
+								.map( function onEachCommandDefinition( commandDefinition ){
+									return commandDefinition.split( /\s+/ )[ 0 ];
+								} );
+
+							scope.$on( "execute-command",
+								function onExecuteCommand( event, command ){
+									if( _.contains( commandList, command.split( /\s+/ )[ 0 ] ) ){
+										$( "section" )
+											.removeClass( "half-page" )
+											.removeClass( "half-page-left" )
+											.hide( );
+
+										$( "section[static]" )
+											.removeClass( "half-page" )
+											.removeClass( "half-page-left" )
+											.addClass( "half-page" )
+											.addClass( "half-page-left" )
+											.show( );
+
+										$( element )
+											.removeClass( "half-page-left" )
+											.removeClass( "half-page" )
+											.addClass( "half-page" )
+											.show( );
+									}
+								} );
+
+							React.renderComponent( vsviewGithubProfile( { "scope": scope } ), element[ 0 ] );
+						}
+					}	
 				}
 			] );
 
