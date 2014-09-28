@@ -141,6 +141,45 @@
 				background-size: 128px;
 				background-repeat: no-repeat;
 			}
+
+			.vsview-github-repository .repository-view-title {
+				padding-top: 2%;
+				padding-left: 2%;
+				padding-right: 2%;
+				padding-bottom: 0%;
+			}
+
+			.vsview-github-repository .repository-view-title h1 {
+				border-bottom: 1px solid #ccc;
+				padding-bottom: 2%;
+			}
+
+			.vsview-github-repository .github-repository-accordion {
+				overflow-y: auto; 
+				border-top: 1px solid #eee;
+				border-right: 1px solid #eee;
+				border-bottom: 1px solid #eee;
+			}
+
+			.vsview-github-repository .repository-item {
+				border-radius: 0px;
+				background-color: #efefef
+			}
+
+			.vsview-github-repository .repository-item .panel-heading {
+				background: none;
+				border-radius: 0px;
+				padding-bottom: 0px;
+				cursor: default;
+			}
+
+			.vsview-github-repository .repository-item .panel-collapse {
+				background-color: #fff;
+			}
+
+			.vsview-github-repository .repository-item .panel-heading a {
+				text-decoration: none;
+			}
 		</style>
 	</head>
 	<body>
@@ -184,6 +223,8 @@
 		<script type="text/javascript" src="https://rawgit.com/michael/github/master/lib/base64.js"></script>
 
 		<script type="text/javascript" src="https://rawgit.com/michael/github/master/github.js"></script>
+
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.3/moment.min.js"></script>
 
 		<script type="text/javascript">
 			var VS = angular.module( "VS", [ "ui.bootstrap" ] );
@@ -593,23 +634,73 @@
 								} );
 						},
 
+						"componentWillUpdate": function componentWillUpdate( ){
+							$( "[data-accordion]", this.getDOMNode( ) ).empty( );
+						},
+
 						"render": function onRender( ){
+							var onEachRepositoryList = function onEachRepositoryList( repositoryData, index ){
+								return React.DOM.div( 
+									{
+										"key": repositoryData.id,
+										"data-accordion-group": "",
+										"className": "repository-item"
+									},
+									React.DOM.div( 
+										{
+											"data-accordion-heading": "",
+										},
+										React.DOM.h3( 
+											null, 
+											repositoryData.name,
+											React.DOM.small( 
+												{
+													"className": "pull-right"
+												}, 
+												"Created " + moment( repositoryData.created_at ).fromNow( ) 
+											)
+										)
+									),
+									React.DOM.div( 
+										{
+											"className": "repository-description row col-md-12"	
+										},
+										React.DOM.p(
+											{
+												"className": "lead"	
+											},
+											React.DOM.small( null, repositoryData.description )
+										)
+									)
+								);
+							};
+
 							return React.DOM.div( 
 								{
-									"className": "vsview-github-repository"
+									"className": "vsview-github-repository container-fluid"
 								},
 								React.DOM.div(
 									{
-										"className": "row"	
-									}
+										"className": "repository-view-title row"	
+									},
+									React.DOM.h1( null, "Repository List" )
 								),
 								React.DOM.div( 
 									{
 										"data-accordion": "",
+										"data-close-others": "true",
 										"className": "github-repository-accordion"
-									}
+									},
+									this.state.repositoryList.map( onEachRepositoryList )
 								)
 							);
+						},
+
+						"componentDidUpdate": function componentDidUpdate( ){
+							this.props.scope.$emit( "rerender-github-repository-view" );
+
+							$( ".github-repository-accordion", this.getDOMNode( ) )
+								.height( Math.round( $( "body" )[ 0 ].clientHeight * .8 ) );
 						}
 					} );
 
@@ -656,9 +747,14 @@
 
 							React.renderComponent( vsviewGithubRepository( { "scope": scope } ), element[ 0 ],
 								function onRender( ){
-									$timeout( function onTimeout( ){
-										$compile( $( ".vsview-github-repository", element )[ 0 ] )( scope );
-									} );
+									scope.$on( "rerender-github-repository-view",
+										function onRerenderGithubRepositoryView( ){
+											$timeout( function onTimeout( ){
+												$compile( $( ".vsview-github-repository", element )[ 0 ] )( scope );
+											} );
+										} );
+
+									scope.$emit( "rerender-github-repository-view" );
 								} );
 						}
 					};
