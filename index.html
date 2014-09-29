@@ -62,9 +62,7 @@
 
 			.vslogo {
 				position: absolute;
-				bottom: 50%;
-				left: 25%;
-				width: 50%;
+				top: 30%;
 				height: 200px;
 				overflow: hidden;
 				background-image: url("https://dl.dropboxusercontent.com/u/10676965/volkovasystems.png");
@@ -75,9 +73,7 @@
 
 			.vsinput {
 				position: absolute;
-				bottom: 45%;
-				left: 25%;
-				width: 50%;
+				top: 50%;
 				text-align: center;
 				font-size: 17px;
 				font-family: "Inconsolata";
@@ -233,7 +229,7 @@
 				function directive( ){
 					var vslogo = React.createClass( {
 						"render": function onRender( ){
-							return React.DOM.div( { "className": "vslogo" } );
+							return React.DOM.div( { "className": "vslogo row col-md-2 col-md-offset-5" } );
 						}
 					} );
 
@@ -306,7 +302,7 @@
 
 						"render": function onRender( ){
 							return React.DOM.input( {
-								"className": "vsinput",
+								"className": "vsinput row col-md-6 col-md-offset-3",
 								"onKeyPress": this.onKeyPress,
 								"onChange": this.onChange,
 								"placeholder": "volkovasystems",
@@ -638,6 +634,10 @@
 							$( "[data-accordion]", this.getDOMNode( ) ).empty( );
 						},
 
+						"shouldComponentUpdate": function shouldComponentUpdate( nextProps, nextState ){
+							return !_.isEqual( this.state.repositoryList, nextState.repositoryList );
+						},
+
 						"render": function onRender( ){
 							var onEachRepositoryList = function onEachRepositoryList( repositoryData, index ){
 								return React.DOM.div( 
@@ -648,7 +648,7 @@
 									},
 									React.DOM.div( 
 										{
-											"data-accordion-heading": "",
+											"data-accordion-heading": ""
 										},
 										React.DOM.h3( 
 											null, 
@@ -689,7 +689,10 @@
 									{
 										"data-accordion": "",
 										"data-close-others": "true",
-										"className": "github-repository-accordion"
+										"className": "github-repository-accordion",
+										"style": {
+											"display": ( this.state.repositoryList.length )? "block": "none"
+										}
 									},
 									this.state.repositoryList.map( onEachRepositoryList )
 								)
